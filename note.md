@@ -324,3 +324,45 @@ print 'Version', version
 在Python中有三种内建的数据结构——列表、元组和字典
 
 9.1 列表
+
+类比 php 中的一维索引数组
+len(shoplist) 数组长度
+shoplist.append('rice')添加一个元素
+print(shoplist)直接打印出来，
+shoplist.sort() 排序，影响的是列表本身
+del shoplist[0]，删除一个元素
+
+9.2 元组
+
+元组合列表十分相似，但是元组不可变
+可以是多维元组
+空元组是一个括号，
+单个元素元组，singleton = (2 , ) 这样Python才能区分元组和表达式中一个带圆括号的对象。
+
+print语句可以使用跟着 % 符号的项目元组的字符串。这些字符串具备定制的功能。定制让输出满足某种特定的格式。定制可以是%s表示字符串或%d表示整数。元组必须按照相同的顺序来对应这些定制。+
+
+age = 22
+name = 'Swaroop'
+
+print '%s is %d years old' % (name, age)
+print 'Why is %s playing with that python?' % name
+
+9.3 字典
+
+类比 php 中的 关联数组
+记住字典中的键/值对是没有顺序的。如果你想要一个特定的顺序，那么你应该在使用前自己对它们排序。
+
+字典是dict类的实例/对象
+
+d = {key1 : value1, key2 : value2 }
+d[key3] = value3
+del[key3]
+
+字典的items方法，来使用字典中的每个键/值对。这会返回一个元组的列表，其中每个元组都包含一对项目——键与对应的值。
+
+for name, address in ab.items():
+    print('Contact %s at %s' % (name, address))
+
+表示这个遍历很有意思啊，
+
+
