@@ -55,3 +55,9 @@ def func3(y):
 y = 50
 func3(y)
 print('y is still', y)
+
+birth =input('birth: ')
+if int(birth) < 2000: # int()函数发现一个字符串并不是合法的数字时就会报错。所以python 不支持隐试转换
+    print('00前')
+else:
+    print('00后')
