@@ -226,7 +226,7 @@ s1 | s2 # {1, 2, 3, 4}
 
 ###调用函数
 
-[doc][0]
+[doc][1]
 
 - abs() 求绝对值
 
@@ -796,4 +796,4 @@ Windows 环境下 Windows把反斜杠（\）作为目录分隔符，而Python用
 
 
 
-[0]:[https://docs.python.org/3/]
+[1]:[https://docs.python.org/3/]
