@@ -4,21 +4,28 @@
 ##python解释器
 
 ###CPython
+
 要运行代码，就需要Python解释器去执行.py文件。
 官方版本的解释器：CPython。这个解释器是用C语言开发的
 
 ###IPython
+
 IPython是基于CPython之上的一个交互式解释器，也就是说，IPython只是在交互方式上有所增强，但是执行Python代码的功能和CPython是完全一样的
 
 CPython用>>>作为提示符，而IPython用In [序号]:作为提示符。
 
 ###PyPy
+
 PyPy是另一个Python解释器，它的目标是执行速度。PyPy采用JIT技术，对Python代码进行动态编译（注意不是解释），所以可以显著提高Python代码的执行速度。
 
 绝大部分Python代码都可以在PyPy下运行，但是PyPy和CPython有一些是不同的，这就导致相同的Python代码在两种解释器下执行可能会有不同的结果。如果你的代码要放到PyPy下执行，就需要了解PyPy和CPython的不同点。
+
 ###Jython
+
 Jython是运行在Java平台上的Python解释器，可以直接把Python代码编译成Java字节码执行。
+
 ###IronPython
+
 IronPython和Jython类似，只不过IronPython是运行在微软.Net平台上的Python解释器，可以直接把Python代码编译成.Net的字节码。
 
 > Python的解释器很多，但使用最广泛的还是CPython。如果要和Java或.Net平台交互，最好的办法不是用Jython或IronPython，而是通过网络调用来交互，确保各程序之间的独立性。
@@ -54,7 +61,9 @@ input(),可以让用户输入字符串，返回的数据类型是str
 ## Python 基本概念
 
 ###数据类型和变量
+
 ####整数
+
 在 Python 中有 4 种类型的数——整数、长整数、浮点数和复数。
 
 - 整数
@@ -69,6 +78,7 @@ Python 可以处理任意大小的整数。长整数不过是大一些的整数�
 取余 %
 
 ####字符串
+
 单引号，双引号，三引号：指示多行字符串，内部自由使用单双引号，
 
 - 转义， \' = \  \\ = \
@@ -91,13 +101,16 @@ True False ，可以进行布尔运算
 > php 中大小写都可以
 
 ####空值
+
 空值：空值是Python里一个特殊的值，用None表示。None不能理解为0，因为0是有意义的
 
 
 ####变量
+
 可以处理不同类型的值，称为数据类型。基本的类型是数和字符串，和 php 不同的是 Python 不允许类型隐式转换
 
 ####常量
+
 习惯大写的变量名表示，
 
 ###字符串和编码
@@ -123,6 +136,7 @@ len()方法计算长度
 ###列表和元组（list and tuple）
 
 ####list
+
 有序可变集合，其中的元素可以是任何类型，类比 PHP 中的索引数组
 索引：正序从 0 开始，倒序从 -1 开始
 
@@ -143,6 +157,7 @@ shop[1] = 'xxx' # 替换
 > 可以有 [][] 这种写法
 
 ####tuple
+
 tuple 和 list 类似，但是 tuple 一旦初始化不可修改。当你定义一个tuple时，在定义的时候，tuple的元素就必须被确定下来。
 
 > 不可变的tuple有什么意义？因为tuple不可变，所以代码更安全。如果可能，能用tuple代替list就尽量用tuple。
@@ -185,6 +200,7 @@ key 不存在会报错，判断 key 是否存在：
 和 list 比较：dict 查找插入极快，占用内存大
 
 ####集合
+
 set和dict类似，也是一组key的集合，但不存储value。由于key不能重复，所以，在set中，没有重复的key。
 要创建一个set，需要提供一个list作为输入集合：
 
@@ -211,6 +227,7 @@ s1 | s2 # {1, 2, 3, 4}
 ###调用函数
 
 [doc][0]
+
 - abs() 求绝对值
 
 > 如果函数的参数不正确，会报 TypeError 错误
@@ -241,7 +258,185 @@ def my_abs(x):
         return -x
 ```
 
-如果你已经把my_abs()的函数定义保存为 abstest.py 文件了，那么，可以在该文件的当前目录下启动 Python 解释器，用 from abstest import my_abs 来导入 my_abs() 函数，注意 abstest 是文件名（不含.py扩展名）：
+如果你已经把 my_abs() 的函数定义保存为 abstest.py 文件了，那么，可以在该文件的当前目录下启动 Python 解释器，用 from abstest import my_abs 来导入 my_abs() 函数，注意 abstest 是文件名（不含.py扩展名）：
+
+####空函数
+
+定义一个什么也不做的函数
+
+```python
+def nop():
+    pass
+```
+
+> 这里 pass 起了一个占位符作用，去掉会报错
+
+####参数检查
+
+调用函数时，如果参数个数不对，Python解释器会自动检查出来，并抛出TypeError
+
+但是如果参数类型不对，Python解释器就无法帮我们检查。
+
+```python
+def my_abs(x):
+    if not isinstance(x, (int, float)):
+        raise TypeError('bad operand type')
+    if x >= 0:
+        return x
+    else:
+        return -x
+
+```
+
+> 和 isinstance  作用类似的还有 type函数
+> 
+> type('foo') == str ,type(2.3) in (int,float)，
+> 
+> 两者区别是：type()不会认为子类是一种父类类型。
+isinstance()会认为子类是一种父类类型。
+
+####返回多个值
+
+```python
+import math
+
+def move(x, y, step, angle=0):
+    nx = x + step * math.cos(angle)
+    ny = y - step * math.sin(angle)
+    return nx, ny
+
+x = move(100, 100, 60, math.pi / 6) 
+print(x) # 这里返回一个元组
+    
+```
+
+> 这里和 PHP 返回多个值一样，放数组里
+
+
+###函数的参数
+
+- 必须按参数在前，默认参数在后
+- 注意默认参数也是一个变量,所以默认参数必须指向不变的对象：
+
+```python
+def add_end(L=[]):
+    L.append('END')
+    return L
+
+add_end([1, 2, 3]) # [1, 2, 3, 'END']
+
+add_end() # ['END']
+add_end() # ['END','END']
+
+# 使用 None 修改
+
+def add_end(L=None):
+    if L is None:
+        L = []
+    L.append('END')
+    return L
+```
+
+####可变参数
+
+*numbers 代表接受到的是一个元组 tuple，此时可以传入任意哥参数。
+
+```python
+# 给定一组数字 a，b，c……，请计算 a2 + b2 + c2 + ……。
+
+def calc(*numbers):
+    sum = 0
+    for n in numbers:
+        sum = sum + n * n
+    return sum
+  
+res = calc(1,2,3)
+```
+
+如果方法要调用 list 中的每一个值
+
+```python
+nums = [1, 2, 3]
+calc(*nums) # 14
+```
+
+####关键字参数
+
+```python
+def person(name, age, **kw):
+    print('name:', name, 'age:', age, 'other:', kw)
+
+person('Adam', 45, gender='M', job='Engineer')
+#输出：name: Adam age: 45 other: {'gender': 'M', 'job': 'Engineer'}
+
+extra = {'city': 'Beijing', 'job': 'Engineer'}
+person('Jack', 24, **extra)
+# 输出：name: Jack age: 24 other: {'city': 'Beijing', 'job': 'Engineer'}
+
+# 这里传进去的字典是一份 copy
+
+```
+
+####命名关键字参数
+
+对于关键字参数，函数的调用者可以传入任意不受限制的关键字参数。至于到底传入了哪些，就需要在函数内部通过kw检查。
+
+仍以 person()函数为例，我们希望检查是否有 city 和 job 参数：
+
+```python
+def person(name, age, **kw):
+    if 'city' in kw:
+        # 有city参数
+        pass
+    if 'job' in kw:
+        # 有job参数
+        pass
+    print('name:', name, 'age:', age, 'other:', kw)
+    
+#但是调用者仍可以传入不受限制的关键字参数
+```
+
+如果要限制关键字参数的名字，就可以用命名关键字参数，例如，只接收 city 和 job 作为关键字参数。这种方式定义的函数如下：
+
+```python
+def person(name, age, *, city, job):
+    print(name, age, city, job)
+```
+
+和关键字参数 **kw 不同，命名关键字参数需要一个特殊分隔符 * ，* 后面的参数被视为命名关键字参数。
+
+> 一个 * 是 tuple （列表->PHP 索引数组），** 是 dict （字典->PHP 关联数组）
+
+```python
+res = person('Jack', 24, city='Beijing', job='Engineer')
+print(res) # Jack 24 Beijing Engineer
+```
+
+如果函数定义中已经有了一个可变参数，后面跟着的命名关键字参数就不再需要一个特殊分隔符*了：
+
+```python
+def person(name, age, *args, city, job):
+    print(name, age, args, city, job)
+```
+
+命名关键字参数必须传入参数名，这和位置参数不同。如果没有传入参数名，调用将报错：
+
+```python
+person('Jack', 24, 'Beijing', 'Engineer')
+
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+TypeError: person() takes 2 positional arguments but 4 were given
+```
+
+
+####参数组合
+
+在 Python 中定义函数，可以用必选参数、默认参数、可变参数、关键字参数和命名关键字参数，这5种参数都可以组合使用。但是请注意，参数定义的顺序必须是：必选参数、默认参数、可变参数、命名关键字参数和关键字参数。
+
+
+
+
 
 第5章 运算符与表达式
 
