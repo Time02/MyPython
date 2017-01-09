@@ -1,6 +1,5 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-# Filename: backup_demo.py
 
 import os
 import time
