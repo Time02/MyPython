@@ -67,22 +67,22 @@ input(),可以让用户输入字符串，返回的数据类型是str
 在 Python 中有 4 种类型的数——整数、长整数、浮点数和复数。
 
 - 整数
-Python 可以处理任意大小的整数。长整数不过是大一些的整数。但是超出一定范围就直接表示为inf（无限大）
+  Python 可以处理任意大小的整数。长整数不过是大一些的整数。但是超出一定范围就直接表示为inf（无限大）
 - 浮点数
-3.23和52.3E-4是浮点数的例子。E标记表示10的幂。在这里，52.3E-4表示52.3 * 10<sup>4</sup>。
+  3.23和52.3E-4是浮点数的例子。E标记表示10的幂。在这里，52.3E-4表示52.3 * 10<sup>4</sup>。
 - 复数
-(-5+4j)和(2.3-4.6j)是复数的例子。
+  (-5+4j)和(2.3-4.6j)是复数的例子。
 
 > 整数运算永远是精确的（除法难道也是精确的？是的！），而浮点数运算则可能会有四舍五入的误差。10/3 = 3.3333333333333335
-还有一种除法是//，称为地板除，两个整数的除法仍然是整数：10//3 = 3
-取余 %
+> 还有一种除法是//，称为地板除，两个整数的除法仍然是整数：10//3 = 3
+> 取余 %
 
 ####字符串
 
 单引号，双引号，三引号：指示多行字符串，内部自由使用单双引号，
 
 - 转义， \' = \  \\ = \
-双引号 内可以识别 单引号
+  双引号 内可以识别 单引号
 
 在一个字符串中， 行末的单独一个反斜杠 \ 表示字符串在下一行继续
 用'''...'''的格式表示多行内容
@@ -289,11 +289,11 @@ def my_abs(x):
 ```
 
 > 和 isinstance  作用类似的还有 type函数
-> 
+>
 > type('foo') == str ,type(2.3) in (int,float)，
-> 
+>
 > 两者区别是：type()不会认为子类是一种父类类型。
-isinstance()会认为子类是一种父类类型。
+> isinstance()会认为子类是一种父类类型。
 
 ####返回多个值
 
@@ -438,6 +438,192 @@ TypeError: person() takes 2 positional arguments but 4 were given
 
 
 
+
+
+#### 递归函数
+
+在函数内部调用自身。比如计算阶乘
+
+```python
+    def recursion(n)
+        if n == 1:
+            return 1
+        return n * recursion(n-1)
+    #函数运行过程，以 recursion(5) 为例：
+    # recursion(5)
+    # 5 * recursion(4)
+    # 5 * (4 * recursion(3))
+    # 5 * (4 * (3 * recursion(2)))
+    # 5 * (4 * (3 * (2 * recursion(1))))
+```
+
+使用递归函数需要注意防止栈溢出。在计算机中，函数调用是通过栈（stack）这种数据结构实现的，每当进入一个函数调用，栈就会加一层栈帧，每当函数返回，栈就会减一层栈帧。由于栈的大小不是无限的，所以，递归调用的次数过多，会导致栈溢出。可以试试：recursion(1000) 会报错。
+
+解决递归调用栈溢出的方法是通过尾递归优化，事实上尾递归和循环的效果是一样的，所以，把循环看成是一种特殊的尾递归函数也是可以的。
+
+尾递归是指，在函数返回的时候，调用自身本身，并且，return语句不能包含表达式。这样，编译器或者解释器就可以把尾递归做优化，使递归本身无论调用多少次，都只占用一个栈帧，不会出现栈溢出的情况。
+
+```python
+    def recursion(n):
+        return recursion_iter(n,1)
+    def recursion_iter(n,lastres):
+        if n == 1:
+            return lastres
+        return recursion_iter(n-1, n*lastres)
+    # 例子：recursion(5):
+    # recursion_iter(5, 1)
+    # recursion_iter(4, 5)
+    # recursion_iter(3, 20)
+    # recursion_iter(2, 60)
+    # recursion_iter(1, 120)
+```
+
+Python标准的解释器没有针对尾递归做优化，任何递归函数都存在栈溢出的问题。
+
+一个 demo [汉诺塔][2] :  ps: 目前还未彻底搞明白 : (
+
+```python
+def move(n,a='A',b='B',c='C'):
+    if n == 1:
+        print('%s->%s'%(a,c))
+        return None
+    else:
+        move(n-1,a,c,b)
+        print('n是：%s，把%s->%s'%(n-1,a,c))
+        move(n-1,b,a,c)
+    return None
+```
+
+## 高级特性
+
+在Python中，代码不是越多越好，而是越少越好。代码不是越复杂越好，而是越简单越好。
+
+### 切片
+
+list 或 tuple 或字符串都可以进行切片操作
+
+```python
+shop = ['apple','bnaner','orange','melons','pear']
+#取前三个元素, 顺序是0开始， 倒序是 -1
+shop[0:3]
+
+#前4个数，每两个取一个：
+shop[0:3:2]
+
+#所有数，每2个取一个：
+shop[::2]
+```
+
+### 迭代
+
+我们把循环遍历称为迭代。
+
+
+
+断一个对象是可迭代对象：collections模块的Iterable类型判断
+
+```python
+from collections import Iterable
+isinstance('abc', Iterable) # str是否可迭代 True
+isinstance([1,2,3], Iterable) # list是否可迭代 True
+isinstance(123, Iterable) # 整数是否可迭代 False
+```
+
+
+
+### 列表生成式
+
+列表生成式即List Comprehensions，是Python内置的非常简单却强大的可以用来创建list的生成式。
+
+例如生成 [1x1, 2x2, 3x3, ..., 10x10] 怎么做？方法一是循环，而列表生成更简洁：
+
+```python
+res = [x * x for x in range(1,11)]
+print(res)
+
+# 筛选出仅偶数的平方
+res = [x * x for x in range(1,11) if x % 2 == 0]
+print(res)
+
+# 使用两层循环，可以生成全排列
+res = [m + n for m in 'ABC' for n in '123']
+print(res)
+
+# 列出上一层目录下的所有文件和目录名
+res = [d for d in os.listdir('../')]
+print(res)
+
+# for 循环可以同时使用多个参数
+d = {'x': 'A', 'y': 'B', 'z': 'C' }
+for k, v in d.items():
+    print(k,'=>',v)
+
+#　列表也可以使用多个参数
+res = [k + '=' + v for k, v in d.items()]
+print(res)
+```
+
+> 写列表生成式时，把要生成的元素`x * x`放到前面，后面跟`for`循环，就可以把list创建出来
+
+
+
+### 生成器（generator）
+
+创建一个generator，第一种方法很简单，只要把一个列表生成式的`[]`改成`()`，就创建了一个generator：
+
+```python
+l = [x * x for x in range(10)]
+print(l)
+#[0, 1, 4, 9, 16, 25, 36, 49, 64, 81]
+g = (x * x for x in range(10))
+print(g)
+
+#通过 next() 函数获得generator的下一个返回值：
+print(next(g)) # 0
+print(next(g)) # 1
+
+# 一般通过 for 循环
+for i in g:
+    print(i)
+```
+
+创建 l  和g 的区别仅在于最外层的 [] 和 () ，l 是一个list，而 g 是一个generator。
+
+
+
+例：斐波拉契数列（Fibonacci）
+
+```python
+def fibnc(max):
+    n, a, b = 0, 0, 1
+    while n < max:
+        print b
+        a, b = b, a+b
+        n = n+1
+    return 'done !'
+```
+
+注意，赋值语句：
+
+```python
+a, b = b, a + b
+```
+
+相当于：
+
+```python
+t = (b, a + b) # t是一个tuple
+a = t[0]
+b = t[1]
+```
+
+但不必显式写出临时变量t就可以赋值。
+
+
+
+
+
+
 第5章 运算符与表达式
 
 运算符， 和 php 很不一样啊 ：）
@@ -549,7 +735,7 @@ continue 语句
 
 跳过当前循环块中的剩余语句，然后 继续 进行下一轮循环，也没什么区别
 
- 
+
 函数
 
 函数通过def关键字定义。def关键字后跟一个函数的 标识符 名称，然后跟一对圆括号。圆括号之中放形参，该行以冒号结尾。接下来是一块语句，它们是函数体。
@@ -796,4 +982,5 @@ Windows 环境下 Windows把反斜杠（\）作为目录分隔符，而Python用
 
 
 
-[1]:[https://docs.python.org/3/]
+[1]:https://docs.python.org/3/
+[2]:http://baike.baidu.com/item/%E6%B1%89%E8%AF%BA%E5%A1%94/3468295
