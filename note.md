@@ -563,7 +563,7 @@ res = [k + '=' + v for k, v in d.items()]
 print(res)
 ```
 
-> 写列表生成式时，把要生成的元素`x * x`放到前面，后面跟`for`循环，就可以把list创建出来
+> 写列表生成式时，把要生成的元素 x * x 放到前面，后面跟 for 循环，就可以把list创建出来
 
 
 
@@ -597,7 +597,7 @@ for i in g:
 def fibnc(max):
     n, a, b = 0, 0, 1
     while n < max:
-        print b
+        yield b
         a, b = b, a+b
         n = n+1
     return 'done !'
@@ -618,6 +618,59 @@ b = t[1]
 ```
 
 但不必显式写出临时变量t就可以赋值。
+
+第二种方法：函数定义中包含 yield 关键字，那么这个函数就是一个generator。
+
+> 函数是顺序执行，遇到 return 语句或者最后一行函数语句就返回。而变成generator的函数，在每次调用 next() 的时候执行，遇到 yield 语句返回，再次执行时从上次返回的 yield 语句处继续执行。
+
+是用 for 循环调用 generator 时，如果想要拿到返回值，必须捕获 StopIteration 错误，返回值包含在 StopIteration 的 value 中。
+
+
+
+### 迭代器
+
+可以直接作用于 for 循环的数据类型：一类是集合数据类型，list, tuple, dict, set, str等。一类是 generatoe。这些对象统称为可迭代对象 Iterable 。
+
+```python
+from collections import Iterable
+isinstance([], Iterable) # True
+isinstance(90, Iterable) # False
+```
+
+可以被 next() 函数调用并不断返回下一个值的对象称为迭代器：Iterator。可以使用 isinstance() 判断一个对象是否是 Iterator 对象。
+
+> Iterator 的计算是惰性的，只有在需要返回下一个数据时它才会计算。
+
+
+
+## 函数式编程（Functional Programming）
+
+函数式编程的一个特点就是，允许把函数本身作为参数传入另一个函数，还允许返回一个函数！
+
+Python对函数式编程提供部分支持。由于Python允许使用变量，因此，Python不是纯函数式编程语言。
+
+
+
+### 高阶函数
+
+> 和诸多语言的思想一样，高度抽象的编程范式
+
+- 变量可以指向函数
+- 函数名也可以是变量
+- 一个函数作为另一个函数的参数
+
+
+
+#### 内建的 map 和 reduce
+
+
+
+
+
+
+
+
+
 
 
 
