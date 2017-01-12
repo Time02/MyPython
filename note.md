@@ -729,13 +729,237 @@ f() # 此时才进行计算
 
 #### 闭包
 
-
+返回闭包时牢记的一点就是：返回函数不要引用任何循环变量，或者后续会发生变化的变量。
 
 ### 匿名函数
 
+略
+
 ### 装饰器
 
+函数对象有一个 `__name__` 属性时，可以得到函数的名字
+
+```python
+def now():
+    print('2017-1-12')
+f = now
+f() # 2017...
+f.__name__ # now
+```
+
+现在要增强 now 函数的功能，但又不希望修改 now 函数的定义，这种在代码运行期间动态增加功能的方式，称之为“装饰器”（Decorator）。装饰器可以理解为一个返回函数的高阶函数。
+
+```python
+# 打印日志的方法
+def log(func):
+    def wrapper(*args, **kw):
+        print('call %s():' % func.__name__)
+        return func(*args, **kw)
+    return wrapper
+```
+
+> *args, **kw 表示接受任意参数的调用
+
+借助Python的@语法，把decorator置于函数的定义处：
+
+```python
+@log
+def now():
+    print('2017-1-12')
+    
+now() # call now() 2017-1-12
+```
+
+把 @log 放到 now 函数的定义处，相当于执行了语句：
+
+```python
+now = log(now)
+```
+
+如果decorator本身需要传入参数，那就需要编写一个返回decorator的高阶函数，写出来会更复杂。比如，要自定义log的文本：
+
+```python
+def log(text):
+    def decorator(func):
+        def wrapper(*args, **kw):
+            print('%s %s():' % (text, func.__name__))
+            return func(*args, **kw)
+        return wrapper
+    return decorator
+
+@log('test')
+def now():
+    print('2017-1-12')
+    
+now()
+now.__name__ #　wrapper
+```
+
+函数也是对象，但经过 decotator 装饰之后的函数， `__name__`  已经变为了 wrapper。因为返回的那个 wrapper() 函数名字就是 wrapper ，所以，需要把原始函数的`__name__`等属性复制到 wrapper() 函数中，否则，有些依赖函数签名的代码执行就会出错。
+
+用 Python内置的 functools.wraps 来处理，所以，一个完整的decorator的写法如下：
+
+```python
+import functools
+
+def log(func):
+    @functools.wraps(func)
+    def wrapper(*args, **kw):
+        print('call %s():' % func.__name__)
+        return func(*args, **kw)
+    return wrapper
+```
+
 ### 偏函数
+
+Python的 functools 模块提供了很多有用的功能，其中一个就是偏函数（Partial function）。
+
+比如 int 有一个参数：
+
+```python
+int('1112', base=8) # base 的默认值为10， 进行 N 进制的转换
+```
+
+假设要大量转 2 进制：
+
+```python
+def int2(x, base=2):
+    return int(x, base)
+```
+
+functools.partial 就是帮助我们创建一个偏函数的，不需要我们自己定义 int2()：
+
+```python
+import functools
+int2 = functools.partial(int, base=2)
+```
+
+简单说， functools.partial 就是把一个函数的某些参数给固定住（也就是设置默认值），返回一个新的函数，调用这个新函数会更简单。
+
+
+
+## 模块
+
+类比 PHP 的组件。在Python中，一个.py文件就称之为一个模块（Module）。
+
+
+
+为了避免模块名冲突，Python引入了按目录来组织模块的方法，称为包（Package）:
+
+```python
+--test_pack
+----__init__.py
+----aa.py
+----bb.py
+```
+
+> 每一个包目录下面都会有一个 `__init__.py` 的文件，这个文件是必须存在的，否则，Python 就把这个目录当成普通目录，而不是一个包。`__init__.py` 可以是空文件，也可以有 Python 代码，因为`__init__.py`本身就是一个模块，而它的模块名就是 mycompany。
+
+aa.py 的模块名就是：test_pack.aa
+
+> 不能和Python自带的模块名称冲突：比如自带 sys ，os
+
+
+
+### 使用模块
+
+Python模块的标准文件模板：
+
+```python
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+' a test module ' #　任何模块代码的第一个字符串都被视为模块的文档注释；
+
+__author__ = 'zuozhe'　# 作者
+
+import sys
+
+def test():
+    args = sys.argv
+    if len(args)==1:
+        print('Hello, world!')
+    elif len(args)==2:
+        print('Hello, %s!' % args[1])
+    else:
+        print('Too many arguments!')
+
+if __name__=='__main__':
+    test()
+```
+
+在运行模块时，Python 解释器把一个特殊变量`__name__`置为`__main__`，而如果在其他地方导入该模块时，if 判断将失败，因此，这种 if 测试可以让一个模块通过命令行运行时执行一些额外的代码，最常见的就是运行测试。
+
+
+
+#### 作用域
+
+Python中，是通过 _ 前缀来实现的。
+
+正常的函数和变量名是公开的（public），可以被直接引用。
+
+类似`__xxx__`这样的变量是特殊变量，可以被直接引用，但是有特殊用途。
+
+类似`_xxx`和`__xxx`这样的函数或变量就是非公开的（private）。
+
+```python
+def _private_1(name):
+    return 'Hello, %s' % name
+
+def _private_2(name):
+    return 'Hi, %s' % name
+
+def greeting(name):
+    if len(name) > 3:
+        return _private_1(name)
+    else:
+        return _private_2(name)
+```
+
+外部不需要引用的函数全部定义成private，只有外部需要引用的函数才定义为public。
+
+### 第三方模块
+
+在Python中，安装第三方模块，是通过包管理工具pip完成的。
+
+Mac或Linux，pip 已经安装。Win 环境需要在安装时勾选。
+
+> Mac或Linux上有可能并存Python 3.x和Python 2.x，因此对应的pip命令是`pip3`。
+
+同 PHP 的组件一样，Python 的模块在：[pipi.python][3]
+
+例如，安装 Python 的图像处理工具库，Pillow（基于Python Imaging Library，支持 Python3）。
+
+```python
+pip install Pillow
+```
+
+生成一个缩略图
+
+```python
+from PIL import Image
+im = Image.open('test.png')
+print(im.format, im.size, im.mode) # PNG (400, 300) RGB
+im.thumbnail((200, 100))
+im.save('thumb.jpg', 'JPEG')
+```
+
+其他常用的第三方库还有MySQL的驱动：`mysql-connector-python`，用于科学计算的NumPy库：`numpy`，用于生成文本的模板工具`Jinja2`，等等。
+
+#### 模块搜索路径
+
+Python会在指定的路径下搜索对应的.py文件，Python解释器会搜索当前目录、所有已安装的内置模块和第三方模块，搜索路径存放在`sys`模块的`path`变量中：
+
+```python
+import sys
+sys.path
+
+# 添加自己的搜索目录
+import sys
+sys.path.append('/Users/xxx/my_py')
+```
+
+
 
 
 
@@ -917,87 +1141,7 @@ Python有一个很奇妙的特性，称为 文档字符串 ，它通常被简称
 你可以使用__doc__（注意双下划线）调用printMax函数的文档字符串属性（属于函数的名称）。请记住Python把 每一样东西 都作为对象，包括这个函数。
 
 
-8章 模块
 
-模块基本上就是一个包含了所有你定义的函数和变量的文件。为了在其他程序中重用模块，模块的文件名必须以.py为扩展名。
-
-#!/usr/bin/python
-# Filename: using_sys.py
-
-import sys
-
-print 'The command line arguments are:'
-for i in sys.argv:
-    print i
-
-print '\n\nThe PYTHONPATH is', sys.path, '\n'
-
-
-我们利用import语句 输入 sys模块。sys模块包含了与Python解释器和它的环境有关的函数。
-当Python执行import sys语句的时候，它在sys.path变量中所列目录中寻找sys.py模块。如果找到了这个文件，这个模块的主块中的语句将被运行，然后这个模块将能够被你 使用 。注意，初始化过程仅在我们 第一次 输入模块的时候进行。
-
-sys.argv变量是一个字符串的 列表
-
-这里，当我们执行python using_sys.py we are arguments的时候，我们使用python命令运行using_sys.py模块，后面跟着的内容被作为参数传递给程序。Python为我们把它存储在sys.argv变量中。
-
-记住，脚本的名称总是sys.argv列表的第一个参数。所以，在这里，'using_sys.py'是sys.argv[0]、'we'是sys.argv[1]、'are'是sys.argv[2]以及'arguments'是sys.argv[3]
-
-
-字节编译的.pyc文件
-
-使输入模块更加快一些
-
-8.1 from..import语句
-
-如果你想要直接输入argv变量到你的程序中（避免在每次使用它时打sys.），那么你可以使用from sys import argv语句。如果你想要输入所有sys模块使用的名字，那么你可以使用from sys import *语句。这对于所有模块都适用。一般说来，应该避免使用from..import而使用import语句，因为这样可以使你的程序更加易读，也可以避免名称的冲突。
-
-8.2模块的name
-当一个模块被第一次输入的时候，这个模块的主块将被运行。假如我们只想在程序本身被使用的时候运行主块，而在它被别的模块输入的时候不运行主块，可以通过模块的name属性完成。
-
-if __name__ == '__main__':
-    print 'This program is being run by itself'
-else:
-    print 'I am being imported from another module'
-
-
-每个Python模块都有它的__name__，如果它是'__main__'，这说明这个模块被用户单独运行，我们可以进行相应的恰当操作。
-
-
-8.3制造你自己的模块
-
-#!/usr/bin/python
-# Filename: mymodule.py
-
-def sayhi():
-    print 'Hi, this is mymodule speaking.'
-
-version = '0.1'
-
-# End of mymodule.py
-
-记住这个模块应该被放置在我们输入它的程序的同一个目录中，或者在sys.path所列目录之一。
-
-使用这个自定义模块
-
-#!/usr/bin/python
-# Filename: mymodule_demo.py
-
-import mymodule
-
-mymodule.sayhi()
-print 'Version', mymodule.version
-
-下面是一个使用from..import语法的版本。
-
-#!/usr/bin/python
-# Filename: mymodule_demo2.py
-
-from mymodule import sayhi, version
-# 或者:
-# from mymodule import *
-
-sayhi()
-print 'Version', version
 
 
 8.5 dir() 函数
@@ -1093,15 +1237,7 @@ delimiter = '_*_'
 mylist = ['Brazil', 'Russia', 'India', 'China']
 print delimiter.join(mylist) #Brazil_*_Russia_*_India_*_China  作为分隔符的字符串join序列的项目的整洁的方法，它返回一个生成的大字符串。
 
-10.1 写一个可以为我的所有重要文件创建备份的程序。
 
-- 指定需要备份的文件和目录
-- 存储到指定目录，
-- 打包为一个时间命名的zip
-
-zip命令有一些选项和参数。-q选项用来表示zip命令安静地工作。-r 对目录递归地工作。两个选项可以组合成缩写形式-qr。选项后面跟着待创建的zip归档的名称，然后再是待备份的文件和目录列表。我们使用已经学习过的字符串join方法把source列表转换为字符串。
-
-os.system函数.在shell中运行命令——如果命令成功运行，它返回0，否则它返回错误号。
 
 Windows 环境下 Windows把反斜杠（\）作为目录分隔符，而Python用反斜杠表示转义符！ 所以，你得使用转义符来表示反斜杠本身或者使用自然字符串。例如，使用'C:\\Documents'或r'C:\Documents'而不是'C:\Documents'——你在使用一个不知名的转义符\D！
 
@@ -1110,3 +1246,4 @@ Windows 环境下 Windows把反斜杠（\）作为目录分隔符，而Python用
 [1]:https://docs.python.org/3/
 [2]:http://baike.baidu.com/item/%E6%B1%89%E8%AF%BA%E5%A1%94/3468295
 [3]:https://research.google.com/archive/mapreduce.html
+[4]:https://pypi.python.org/
