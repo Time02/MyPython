@@ -961,11 +961,203 @@ sys.path.append('/Users/xxx/my_py')
 
 
 
+## 面向对象
+
+在 Python 中，所有数据类型都可以视为对象。
+
+### 类和实例
+
+首先写一个 Python 格式的 class：
+
+```python
+class Student(object):
+    
+    def __init__(self, name, score):
+        self.name = name
+        self.score = score
+    
+    def get_score(self):
+        print('s%: s%' % (self.name, self.score))
+       
+susan = Student('susan', 99)
+susan.get_score()
+```
+
+class 后面紧跟类名，类名通常大写开头，（object）表示该类是从哪个类继承下来的，若没有就写 object 类，这是所有类最终都会继承的类。创建实例，通过类名+（） 实现。
+
+`__init__`方法的第一个参数永远是 self ，表示创建的实例本身，然后在self 上绑定参数，有了这个方法，在创建实例的时候就不能传入空参数。
+
+### 访问限制
+
+Student 类，外部代码还是可以修改实例的 name，score 属性，如果要让内部属性不被访问，需要在属性名称前加上两个下划线：
+
+```python
+class Student(object):
+    
+    def __init__(self, name, score):
+        self.__name = name
+        self.__score = score
+    
+    def get_score(self):
+        print('s%: s%' % (self.__name, self.__score))
+       
+susan = Student('susan', 99)
+print(susan._Student__name) #仍然可以访问
+susan.__name
+```
+
+> 实例的变量名如果以`__`开头，就变成了一个私有变量（private），只有内部可以访问，外部不能访问。不能直接访问`__name`是因为Python解释器对外把`__name`变量改成了`_Student__name`，所以，仍然可以通过`_Student__name`来访问`__name`变量。但是不同版本的Python解释器可能会把`__name`改成不同的变量名，所以不可以这么做。
+
+如果外部代码要获取name和score，可以给Student类增加 get_name 和 get_score 方法，修改增加 set_name，set_score 方法，在方法内可以进行参数验证。
+
+> 在Python中，变量名类似`__xxx__`的，是特殊变量，特殊变量是可以直接访问的，不是private变量，所以，不能用`__name__`、`__score__`这样的变量名。类似`_name`，这样的实例变量外部是可以访问的，但是，按照约定俗成的规定，当你看到这样的变量时，意思就是，“虽然我可以被访问，但是，请把我视为私有变量，不要随意访问”
 
 
 
+### 继承和多态
+
+当子类和父类都存在相同的 run() 方法时，我们说，子类的 run() 覆盖了父类的 run() ，在代码运行的时候，总是会调用子类的 run()。这样，我们就获得了继承的另一个好处：多态。
+
+### 获取对象信息
+
+type() 方法：
+
+```python
+type(123) # <class 'int'>
+
+#判断一个对象是否是函数
+import types
+
+def fn():
+    pass
+
+print(type(fn)==types.FunctionType)
+```
+
+对于class的继承关系来说，使用 type() 就很不方便。我们要判断class的类型，可以使用 isinstance()函数。
+
+```python
+#继承关系：
+object -> Animal -> Dog -> Husky
+h = Husky()
+isinstance(h, Husky) # True
+isinstance(h, Dog) # True
+
+```
+
+dir() 方法，获取一个对象的所有属性和方法，
+
+```python
+print(dir('aa'))
+```
+
+类似`__xxx__`的属性和方法在Python中都是有特殊用途的，比如`__len__`方法返回长度。在 Python中，如果你调用 len() 函数获取一个对象的长度，实际上，在 len() 函数内部，它自动去调用该对象的`__len__()`方法，所以，下面的代码是等价的：
+
+```python
+len('ABC') # 3
+'ABC'.__len__() # 3
+```
 
 
+
+### 实例属性和类
+
+给实例绑定属性的方法是通过实例变量，但是，如果 Student 类本身需要绑定一个属性呢？可以直接在class中定义属性，这种属性是类属性，归 Student 类所有：
+
+```python
+class Student(object):
+    name = 'Student'
+
+s = Student() # 创建实例s
+print(s.name) # Student, 打印name属性，因为实例并没有name属性，所以会继续查找class的name属性
+
+print(Student.name) # Student,打印类的name属性
+
+s.name = 'Michael' # 给实例绑定name属性
+print(s.name) # Michael,由于实例属性优先级比类属性高，因此，它会屏蔽掉类的name属性
+
+print(Student.name) # Student,但是类属性并未消失，用Student.name仍然可以访问
+
+del s.name # 如果删除实例的name属性
+print(s.name) # 再次调用s.name，由于实例的name属性没有找到，类的name属性就显示出来了
+Student
+```
+
+
+
+## 面向对象高级编程
+
+在Python中，面向对象还有很多高级特性。
+
+### 使用`__slots__`
+
+正常情况下，当我们定义了一个class，创建了一个class的实例后，我们可以给该实例绑定任何属性和方法。
+
+```python
+from types import MethodType
+
+class Student(object):
+    pass
+s = Student()
+s.name = 'susan' # 动态给实例绑定一个属性
+print(s.name) # susan
+
+def set_age(self, age): # 定义一个函数作为实例方法
+    self.age = age
+s.set_age = MethodType(set_age, s) # 给实例绑定一个方法
+s.set_age(25) # 调用实例方法
+print(s.age) # 25
+```
+
+此时绑定发方法只对此实例有效。为了给所有实例都绑定方法，可以给class绑定方法：
+
+```python
+def set_score(self, score):
+    self.score = score
+
+Student.set_score = set_score
+```
+
+只允许对Student实例添加 name 和 age 属性。为了达到限制的目的，Python允许在定义class的时候，定义一个特殊的`__slots__`变量，来限制该class实例能添加的属性：
+
+```python
+class Student(object):
+    __slots__ = ('name', 'age') # 用tuple定义允许绑定的属性名称
+  
+s = Student()
+s.name = 'susan'
+s.age = 25
+s.score = 99
+# Traceback (most recent call last):
+#  File "<stdin>", line 1, in <module>
+# AttributeError: 'Student' object has no attribute 'score'
+```
+
+> 使用`__slots__`要注意，`__slots__`定义的属性仅对当前类实例起作用，对继承的子类是不起作用的
+
+
+
+### 使用 @propety
+
+Python内置的 @property 装饰器就是负责把一个方法变成属性调用的：
+
+```python
+class Student(object):
+
+    @property
+    def score(self):
+        return self._score
+
+    @score.setter
+    def score(self, value):
+        if not isinstance(value, int):
+            raise ValueError('score must be an integer!')
+        if value < 0 or value > 100:
+            raise ValueError('score must between 0 ~ 100!')
+        self._score = value
+```
+
+> @property 的实现比较复杂，我们先考察如何使用。把一个getter方法变成属性，只需要加上 @property 就可以了，此时， @property 本身又创建了另一个装饰器 @score.setter ，负责把一个setter方法变成属性赋值，于是，我们就拥有一个可控的属性操作。
 
 
 
