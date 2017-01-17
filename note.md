@@ -1161,6 +1161,226 @@ class Student(object):
 
 
 
+### 多重继承
+
+通过多重继承，一个子类就可以同时获得多个父类的所有功能。
+
+```python
+class Bat(Mammal, Flyable):
+    pass
+```
+
+> 两个父类中有相同方法，子类调用这个方法时， 调用的是第一个被继承父类的方法
+
+#### Mixln
+
+这种设计通常称之为 MixIn。MixIn 的目的就是给一个类增加多个功能，这样，在设计类的时候，我们优先考虑通过多重继承来组合多个 MixIn 的功能，而不是设计多层次的复杂的继承关系。
+
+### 定制类
+
+`__len__()`方法是为了能让class作用于 len() 函数。
+
+`__str__()`方法定制打印内容。
+
+`__repr__()`交互环境下调试服务使用。
+
+`__iter__()`方法用于 for 循环。
+
+`__getitem__()`方法用于像 list 那样按照下标取出元素。切片功能要单独写，一个切片对象 slice。
+
+`__getattr__()`方法，动态返回一个属性。
+
+> 这个方法的应用场景：可以写出一个链式调用，见 demo。
+
+`__call__()`方法，可以直接对实例进行调用。
+
+> 对实例进行直接调用就好比对一个函数进行调用一样，所以你完全可以把对象看成函数，把函数看成对象，因为这两者之间本来就没啥根本的区别。
+>
+> 通过 callable() 函数，我们就可以判断一个对象是否是“可调用”对象。
+
+
+
+### 使用枚举类
+
+```python
+from enum import Enum, unique
+
+@unique # 保证没有重复值的成员
+class Color(Enum):
+    red = 1
+    orange = 2
+    yellow = 3
+    green = 4
+    blue = 5
+    indigo = 6
+    purple = 7
+
+c = Color
+print(Color['red']) #Color.red
+print(Color['red'].name) # red
+print(Color['red'].value) # 1
+
+# 每一个成员都有它们各自名称和值，Color.red成员的名称是：red，值是：1。
+```
+
+
+
+### 使用元类
+
+type() 函数可以查看一个类型或变量的类型，也可以创建新的类型。
+
+```python
+def fn(self, name='world'): # 先定义函数
+    print('Hello, %s.' % name)
+
+Hello = type('Hello', (object,), dict(hello=fn)) # 创建Hello class
+
+print(type(Hello)) # <class 'type'>
+```
+
+
+
+要创建一个 class 对象， type() 函数依次传入3个参数：
+
+- class 的名称；
+- 继承的父类集合，注意 Python 支持多重继承，如果只有一个父类，别忘了 tuple 的单元素写法；
+- class的方法名称与函数绑定，这里我们把函数 fn 绑定到方法名 hello 上。
+
+#### metaclass (元类)
+
+除了使用 type() 动态创建类以外，要控制类的创建行为，还可以使用 metaclass。
+
+当我们定义了类以后，就可以根据这个类创建出实例，所以：先定义类，然后创建实例。
+
+待定---
+
+
+
+# 错误，调试和测试
+
+### 错误处理
+
+```python
+try:
+    print('try...')
+    r = 10 / int('2')
+    print('result:', r)
+except ValueError as e:
+    print('ValueError:', e)
+except ZeroDivisionError as e:
+    print('ZeroDivisionError:', e)
+else:
+    print('no error!')
+finally:
+    print('finally...')
+print('END')
+```
+
+出现错误先执行 except ，再执行 finally ，没有错误，finally 也被执行
+
+#### 调用堆栈
+
+如果错误没有被捕获，它就会一直往上抛，最后被Python解释器捕获，打印一个错误信息，然后程序退出。
+
+#### 记录堆栈
+
+Python 内置的 logging 模块可以非常容易地记录错误信息：
+
+```python
+# err_logging.py
+
+import logging
+
+def foo(s):
+    return 10 / int(s)
+
+def bar(s):
+    return foo(s) * 2
+
+def main():
+    try:
+        bar('0')
+    except Exception as e:
+        logging.exception(e)
+
+main()
+print('END')
+```
+
+通过配置，logging 还可以把错误记录到日志文件里，方便事后排查。
+
+#### 抛出错误
+
+因为错误是class，捕获一个错误就是捕获到该class的一个实例。因此，错误并不是凭空产生的，而是有意创建并抛出的。Python的内置函数会抛出很多类型的错误，我们自己编写的函数也可以抛出错误。
+
+
+
+### 调试
+
+- 直接 print 简单粗暴有效，当然无脑 print 就算了
+- 凡是用 print 来辅助查看的地方，都可以用断言（assert）来替代：
+
+````python
+def foo(s):
+    n = int(s)
+    assert n != 0, 'n is zero!'
+    return 10 / n
+
+def main():
+    foo('0')
+````
+
+- 把 print 替换为 logging 是第3种方式，和 assert 比，logging 不会抛出错误，而且可以输出到文件：
+
+```python
+import logging
+logging.basicConfig(level=logging.INFO)
+
+s = '0'
+n = int(s)
+logging.info('n = %d' % n)
+print(10 / n)
+```
+
+- 启动Python的调试器pdb，让程序以单步方式运行，可以随时查看运行状态。
+
+```python
+def foo(s):
+    n = int(s)
+    print('>>> n = %d' % n)
+    return 10 / n
+
+def main():
+    foo('0')
+
+
+s = '0'
+n = int(s)
+print(10 / n)
+
+# 命令行
+python3 -m pdb err.py
+#然后输入 1 来查看代码 
+```
+
+
+
+### 单元测试
+
+### 文档测试
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
