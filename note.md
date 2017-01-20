@@ -1360,18 +1360,257 @@ print(10 / n)
 
 # 命令行
 python3 -m pdb err.py
-#然后输入 1 来查看代码 
+#然后输入 1 来查看代码 这里有点问题，
 ```
 
 
 
 ### 单元测试
 
+测试驱动开发（TDD：Test-Driven Development）。测试为驱动的开发模式最大的好处就是确保一个程序模块的行为符合我们设计的测试用例。在将来修改的时候，可以极大程度地保证该模块行为仍然是正确的。mydict.py:
+
+```python
+class Dict(dict):
+
+    def __init__(self, **kw):
+        super().__init__(**kw)
+
+    def __getattr__(self, key):
+        try:
+            return self[key]
+        except KeyError:
+            raise AttributeError(r"'Dict' object has no attribute '%s'" % key)
+
+    def __setattr__(self, key, value):
+        self[key] = value
+```
+
+引入Python自带的 unittest 模块，编写 mydict_test.py 如下：
+
+```python
+import unittest
+
+from mydict import Dict
+
+class TestDict(unittest.TestCase):
+    
+    def test_init(self):
+        d = Dict(a = 1, b = 'test')
+        self.assertEqual(d.a, 1)
+        self.assertEqual(d.b, 'test')
+        self.assertEqual(isinstance(d, dict))
+       
+    def test_key(self):
+        d = Dict()
+        d['key'] = 'value'
+        self.assertEqual(d.key, 'value')
+        
+    def test_attr(self):
+        d = Dict()
+        d.key = 'value'
+        self.assertTrue('key' in d)
+        self.assertEqual(d['key'], 'value')
+       
+    def test_keyerror(self):
+        d = Dict()
+        with self.assertRaises(KeyError):
+            value = d['empty']
+          
+    def test_attrerror(self):
+        d = Dict()
+        with self.assertRaises(AttributeError):
+            value = d.empty
+     
+    if __name__ == '__main__':
+        unittest.main()
+```
+
+编写单元测试时，需要编写一个测试类，从 unittest.TestCase 继承。
+
+以 test 开头的方法就是测试方法，不以 test 开头的方法不被认为是测试方法，测试的时候不会被执行。对每一类测试都需要编写一个 test_xxx() 方法。由于 unittest.TestCase 提供了很多内置的条件判断，我们只需要调用这些方法就可以断言输出是否是我们所期望的。最常用的断言就是 assertEqual()：
+
+```python
+self.assertEqual(abs(-1), 1) # 断言函数返回的结果与1相等
+```
+
+另一种重要的断言就是期待抛出指定类型的 Error，比如通过 d['empty'] 访问不存在的key时，断言会抛出 KeyError ：
+
+```python
+with self.assertRaises(KeyError):
+    value = d['empty']
+```
+
+而通过 d.empty 访问不存在的 key 时，我们期待抛出 AttributeError ：
+
+```python
+with self.assertRaises(AttributeError):
+    value = d.empty
+```
+
+运行单元测试：
+
+```python
+python3 mydict_test.py
+```
+
+或者
+
+```python
+python3 -m unittest mydict_test
+```
+
+#### setUP 与 tearDown
+
+这两个方法会分别在每调用一个测试方法的前后分别被执行。
+
+
+
 ### 文档测试
 
+Python内置的“文档测试”（doctest）模块可以直接提取注释中的代码并执行测试。
+
+doctest严格按照Python交互式命令行的输入和输出来判断测试结果是否正确。只有测试异常的时候，可以用 ... 表示中间一大段烦人的输出。
+
+```python
+# mydict2.py
+class Dict(dict):
+    '''
+    Simple dict but also support access as x.y style.
+
+    >>> d1 = Dict()
+    >>> d1['x'] = 100
+    >>> d1.x
+    100
+    >>> d1.y = 200
+    >>> d1['y']
+    200
+    >>> d2 = Dict(a=1, b=2, c='3')
+    >>> d2.c
+    '3'
+    >>> d2['empty']
+    Traceback (most recent call last):
+        ...
+    KeyError: 'empty'
+    >>> d2.empty
+    Traceback (most recent call last):
+        ...
+    AttributeError: 'Dict' object has no attribute 'empty'
+    '''
+    def __init__(self, **kw):
+        super(Dict, self).__init__(**kw)
+
+    def __getattr__(self, key):
+        try:
+            return self[key]
+        except KeyError:
+            raise AttributeError(r"'Dict' object has no attribute '%s'" % key)
+
+    def __setattr__(self, key, value):
+        self[key] = value
+
+if __name__=='__main__':
+    import doctest
+    doctest.testmod()
+```
+
+运行：
+
+```python
+python3 mydict2.py
+```
+
+什么输出也没有。这说明我们编写的doctest运行都是正确的。
 
 
 
+## IO 编程
+
+使用了流（stream）概念，每种语言都有这个。
+
+同步和异步。
+
+异步的编程模型复杂，涉及到怎么通知，回调模式（程序执行完来告诉你），轮询模式（不停的查询程序执行完没有）等。
+
+
+
+### 文件读写
+
+```python
+f = open('/xx/xx/test.txt', 'r') # r 表示读
+f.read() # 一次性读取全部内容 
+
+f.close()
+```
+
+> Python把内容读到内存，用一个`str`对象表示
+
+由于文件读写可能产生 IOError ，一旦出错 close() 不会被调用，Python 引入了 with 语句来自动调用 close
+
+```python
+with open('/xx/xx/file', 'r') as f:
+    print(f.read()) 
+```
+
+针对大型文件
+
+反复调用 read(size) 方法，每次最多读取 size 个字节的数据。
+
+调用 readline() 可以每次读取一行内容，调用 readlines() 一次读取所有内容并按行返回 list 。
+
+```python
+for line in f.readlines():
+    print(line.strip()) # 把末尾的'\n'删掉
+```
+
+#### file-like Object
+
+像 open() 函数返回的这种有个 read() 方法的对象，在 Python 中统称为 file-like Object。除了 file 外，还可以是内存的字节流，网络流，自定义流等等。file-like Object 不要求从特定类继承，只要写个 read() 方法就行。
+
+ StringIO 就是在内存中创建的file-like Object，常用作临时缓冲。
+
+#### 二进制文件
+
+要读取二进制文件，比如图片、视频等等，用 rb 模式打开文件即可：
+
+```python
+f = open('/xx/xx/test.jpg', 'rb')
+f.read()
+# b'\xff\xd8\xff\xe1\x00\x18Exif\x00\x00...' # 十六进制表示的字节
+```
+
+#### 字符编码
+
+要读取非UTF-8编码的文本文件，需要给 open() 函数传入 encoding 参数，例如，读取 GBK 编码的文件：
+
+```python
+f = open('/xx/xx/gbk.txt', 'r', encoding='gbk')
+f.read()
+```
+
+遇到有些编码不规范的文件，你可能会遇到 UnicodeDecodeError ，因为在文本文件中可能夹杂了一些非法编码的字符。遇到这种情况， open() 函数还接收一个 errors 参数，表示如果遇到编码错误后如何处理。最简单的方式是直接忽略：
+
+```python
+f = open('/xx/xx/gbk.txt', 'r', encoding='gbk', errors='ignore')
+```
+
+#### 写文件
+
+写文件和读文件是一样的，唯一区别是调用 open() 函数时，传入标识符 'w' 或者 'wb' 表示写文本文件或写二进制文件：
+
+```python
+f = open('/xx/xx/test.txt', 'w')
+f.write('Hello, world!')
+f.close()
+```
+
+你可以反复调用 write() 来写入文件，但是务必要调用 f.close() 来关闭文件。当我们写文件时，操作系统往往不会立刻把数据写入磁盘，而是放到内存缓存起来，空闲的时候再慢慢写入。只有调用 close() 方法时，操作系统才保证把没有写入的数据全部写入磁盘。忘记调用 close() 的后果是数据可能只写了一部分到磁盘，剩下的丢失了。所以，还是用 with 语句来得保险：
+
+```python
+with open('/x/xx/test.txt', 'w') as f:
+    f.write('Hello, world!')
+```
+
+要写入特定编码的文本文件，请给 open() 函数传入 encoding 参数，将字符串自动转换成指定编码。
 
 
 
