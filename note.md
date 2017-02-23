@@ -1614,6 +1614,109 @@ with open('/x/xx/test.txt', 'w') as f:
 
 
 
+### StringIO和BytesIO
+
+#### StringIO 
+
+意思是在内存中读写 str。
+
+```python
+from io import StringIO
+f = StringIO()
+f.write('hello')
+print(f.getvalue()) # getvalue()方法用于获得写入后的str。
+
+# 用一个str初始化StringIO,读取 StringIO 
+from io import StringIO
+f = StringIO('Hello!\nHi!\nGoodbye!')
+while True:
+     s = f.readline()
+     if s == '':
+         break
+     print(s.strip())
+```
+
+
+
+#### BytesIO
+
+StringIO操作的只能是str，如果要操作二进制数据，就需要使用BytesIO。
+
+BytesIO 在内存中读写bytes:
+
+```python
+from io import BytesIO
+f = BytesIO()
+f.write('时间'.encode('utf-8'))
+print(f.getvalue())
+
+# 用一个bytes初始化BytesIO，然后读取
+from io from BytesIO
+f = BytesIO(b'\xe4\xb8\xad\xe6\x96\x87')
+f.read()
+```
+
+
+
+### 文件和目录
+
+#### 环境变量
+
+```python
+os.environ
+
+# 要获取某个环境变量的值，可以调用os.environ.get('key')：
+```
+
+
+
+#### 操作文件和目录
+
+操作文件和目录的函数一部分放在 os 模块中，一部分放在 os.path 模块中。
+
+```python
+import os
+# 查看当前目录的绝对路径:
+>>> os.path.abspath('.')
+'/Users/michael'
+# 在某个目录下创建一个新目录，首先把新目录的完整路径表示出来:
+>>> os.path.join('/Users/michael', 'testdir')
+'/Users/michael/testdir'
+# 然后创建一个目录:
+>>> os.mkdir('/Users/michael/testdir')
+# 删掉一个目录:
+>>> os.rmdir('/Users/michael/testdir')
+# 拆分路径
+>>> os.path.split('/Users/michael/testdir/file.txt')
+('/Users/michael/testdir', 'file.txt')
+# 文件扩展名
+>>> os.path.splitext('/path/to/file.txt')
+('/path/to/file', '.txt')
+```
+
+> 这些合并、拆分路径的函数并不要求目录和文件要真实存在，它们只对字符串进行操作。
+
+>  把两个路径合成一个时，不要直接拼字符串，而要通过 os.path.join() 函数，这样可以正确处理不同操作系统的路径分隔符。
+
+文件操作：假定当前目录
+
+```python
+# 对文件重命名:
+>>> os.rename('test.txt', 'test.py')
+# 删掉文件:
+>>> os.remove('test.py')
+```
+
+复制文件的函数在 os 模块中不存在，shutil 模块提供了 copyfile() 的函数，你还可以在 shutil 模块中找到很多实用函数，它们可以看做是 os 模块的补充。
+
+列出当前目录所有的 py 文件
+
+```python
+>>> [x for x in os.listdir('.') if os.path.isfile(x) and os.path.splitext(x)[1]=='.py']
+```
+
+
+
 
 
 
