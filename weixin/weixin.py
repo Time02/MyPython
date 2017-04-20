@@ -854,6 +854,7 @@ class WebWeixin(object):
                     'url': msg['Url'],
                     'appname': self._searchContent('appname', content, 'xml')
                 }
+                self._insert(card)
                 raw_msg = {'raw_msg': msg, 'message': '%s 分享了一个%s: %s' % (
                     name, appMsgType[msg['AppMsgType']], json.dumps(card))}
                 self._showMsg(raw_msg)
@@ -1189,18 +1190,33 @@ class WebWeixin(object):
         return '未知'
 
     # 2017年4月19日 16:51:06
-    def database(self):
-        db = pymysql.connect(user='root', password='', database='test')
-        cursor = db.cursor()
-        try:
-            cursor.execute('insert into users (name,age) values (%s,%s)', ['Michael', 2])
-            db.commit()
-            logging.debug('写入数据库成功！')
-        except:
-            # 如果发生错误则回滚
-            db.rollback()
-            logging.error('写入数据库失败！')
+    # def database(self):
+    #     db = pymysql.connect(user='root', password='', database='test')
+    #     cursor = db.cursor()
+    #     try:
+    #         cursor.execute('insert into users (name,age) values (%s,%s)', ['Michael', 2])
+    #         db.commit()
+    #         logging.debug('写入数据库成功！')
+    #     except:
+    #         # 如果发生错误则回滚
+    #         db.rollback()
+    #         logging.error('写入数据库失败！')
 
+    # 2017年4月20日 16:04:25
+
+    def _insert(self, params):
+        url = 'http://www.chex.cn/api/data.php'
+
+        params['type'] = 'test'
+        params['_no_sign'] = 1
+
+        res_insert = self._post(url, params, False).decode("utf-8")
+
+        if res_insert == '':
+            logging.error('insert error')
+            return False
+        else:
+            logging.info('insert OK !')
 
 class UnicodeStreamFilter:
 
@@ -1231,3 +1247,4 @@ if __name__ == '__main__':
 
     webwx = WebWeixin()
     webwx.start()
+
